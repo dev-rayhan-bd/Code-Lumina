@@ -6,6 +6,7 @@ import aboutRouter from "../modules/about/about.route";
 import { ContactRoutes } from "../modules/ContactUs/contact.route";
 import termsRouter from "../modules/Terms/terms.route";
 import privacyPolicyRouter from "../modules/PrivacyPolicy/privacyPolicy.routes";
+import { ReviewRoutes } from "../modules/CodeReview/codereview.routes";
 
 
 const router = Router();
@@ -38,6 +39,10 @@ const moduleRoutes = [
   {
     path: "/privacy",
     route:privacyPolicyRouter,
+  },
+  {
+    path: "/review",
+    route:ReviewRoutes,
   },
 
 ];
