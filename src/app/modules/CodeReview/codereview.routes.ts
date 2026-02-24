@@ -23,7 +23,12 @@ router.get(
   auth( USER_ROLE.superAdmin), 
   CodeReviewControllers.getAllReviews
 );
-
+// 
+router.get(
+  '/analytics', 
+  auth(USER_ROLE.superAdmin,USER_ROLE.user), 
+  CodeReviewControllers.getAnalytics
+);
 // single review details
 router.get(
   '/:id', 
@@ -31,11 +36,15 @@ router.get(
   CodeReviewControllers.getSingleReview
 );
 
-// status update for researcher or admin
+// isVerified true
 router.patch(
-  '/:id/status', 
+  '/verify/:id', 
   auth(USER_ROLE.superAdmin,USER_ROLE.user), 
-  CodeReviewControllers.updateReviewStatus
+  CodeReviewControllers.verifyReview
 );
+
+
+
+
 
 export const ReviewRoutes = router;

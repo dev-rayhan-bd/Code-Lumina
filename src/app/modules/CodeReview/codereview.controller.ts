@@ -6,30 +6,55 @@ import sendResponse from "../../utils/sendResponse";
 import { analyzeCodeWithAI } from "../Services/ai.service";
 import { CodeReviewModel } from "./codereview.model";
 import { CodeReviewServices } from "./codereview.sevices";
+import AppError from "../../errors/AppError";
 
 // for code review and save on db
+
+
 const processCodeReview = catchAsync(async (req: Request, res: Response) => {
-  const { code } = req.body;
+  const { code, groundTruth } = req.body;
 
-  
+  //  AI analysys
   const aiResult = await analyzeCodeWithAI(code);
+  const aiFoundBugs = aiResult.vulnerabilities && aiResult.vulnerabilities.length > 0;
 
+  // ২. Confusion Matrix Logic (Auto-Classification)
+  let classification: 'TP' | 'TN' | 'FP' | 'FN';
+  if (groundTruth === 'Vulnerable') {
+    classification = aiFoundBugs ? 'TP' : 'FN';
+  } else {
+    classification = aiFoundBugs ? 'FP' : 'TN';
+  }
 
+ 
   const savedData = await CodeReviewModel.create({
     user: req.user?.userId,
     codeSnippet: code,
-    modelName: "Llama-3.3-70b (Groq)", 
+    modelName: "Llama-3.3-70b (Groq)",
     analysis: aiResult,
-    status: 'analyzed' // default status
+    groundTruth,
+    classification
   });
 
   sendResponse(res, {
     statusCode: httpStatus.OK,
     success: true,
-    message: "AI Analysis Completed!",
+    message: `Analysis Completed! Classified as ${classification}`,
     data: savedData,
   });
 });
+
+// analytics
+const getAnalytics = catchAsync(async (req: Request, res: Response) => {
+  const result = await CodeReviewServices.getAnalyticsFromDB();
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: "Research metrics retrieved successfully",
+    data: result,
+  });
+});
+
 
 //code review history
 const getMyReviews = catchAsync(async (req: Request, res: Response) => {
@@ -68,21 +93,19 @@ const getSingleReview = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
-// review status update after comparing ai given result for detecting Accuracy ,this is the part for thesis
-const updateReviewStatus = catchAsync(async (req: Request, res: Response) => {
+const verifyReview = catchAsync(async (req: Request, res: Response) => {
   const { id } = req.params;
-  const { status } = req.body;
+  
+  const result = await CodeReviewServices.verifyReviewInDB(id as string);
 
-  const result = await CodeReviewModel.findByIdAndUpdate(
-    id,
-    { status },
-    { new: true }
-  );
+  if (!result) {
+    throw new AppError(httpStatus.NOT_FOUND, "Review record not found!");
+  }
 
   sendResponse(res, {
     statusCode: httpStatus.OK,
     success: true,
-    message: "Review status updated successfully",
+    message: "Review verified successfully",
     data: result,
   });
 });
@@ -91,6 +114,6 @@ export const CodeReviewControllers = {
   processCodeReview,
   getMyReviews,
   getSingleReview,
-  updateReviewStatus,
-  getAllReviews
+  verifyReview,
+  getAllReviews,getAnalytics
 };

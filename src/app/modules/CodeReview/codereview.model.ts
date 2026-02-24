@@ -5,20 +5,24 @@ const codeReviewSchema = new Schema({
   codeSnippet: { type: String, required: true },
   modelName: { type: String, required: true },
   analysis: {
-    vulnerabilities: [{ 
-      type: { type: String }, // issue like SQL Injection 
-      severity: { type: String }, // like High, Medium
-      description: { type: String }
-    }],
+    vulnerabilities: [{ type: Object }],
     rating: { type: Number },
     suggestions: [String]
   },
-  iteration: { type: Number, default: 1 }, //for checking Reliability 
-  status: { 
+  groundTruth: { 
     type: String, 
-    enum: ['analyzed', 'verified', 'false_positive'], 
-    default: 'analyzed' 
+    enum: ['Safe', 'Vulnerable'], 
+    required: true 
   },
+  classification: { 
+    type: String, 
+    enum: ['TP', 'TN', 'FP', 'FN'],
+    required: true
+  },
+  isVerified: { 
+    type: Boolean, 
+    default: false 
+  }
 }, { timestamps: true });
 
 export const CodeReviewModel = model('CodeReview', codeReviewSchema);
