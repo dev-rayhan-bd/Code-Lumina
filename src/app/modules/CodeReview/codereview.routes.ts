@@ -26,7 +26,7 @@ router.get(
 // 
 router.get(
   '/analytics', 
-  auth(USER_ROLE.superAdmin,USER_ROLE.user), 
+  auth(USER_ROLE.superAdmin), 
   CodeReviewControllers.getAnalytics
 );
 // single review details
@@ -39,7 +39,7 @@ router.get(
 // isVerified true
 router.patch(
   '/verify/:id', 
-  auth(USER_ROLE.superAdmin,USER_ROLE.user), 
+  auth(USER_ROLE.superAdmin), 
   CodeReviewControllers.verifyReview
 );
 

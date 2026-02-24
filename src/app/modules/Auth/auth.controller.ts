@@ -10,6 +10,29 @@ import { AuthServices } from './auth.services';
 import config from '../../config';
 import uploadImage from '../../middleware/upload';
 
+
+// configure cookie
+
+
+const isProduction = config.NODE_ENV === 'production';
+
+const accessTokenOptions: any = {
+
+  secure: isProduction, 
+  
+  httpOnly: true,
+  
+  sameSite: isProduction ? 'none' : 'lax', 
+  
+  maxAge: 1 * 24 * 60 * 60 * 1000, // 1d
+};
+
+const refreshTokenOptions: any = {
+  secure: isProduction,
+  httpOnly: true,
+  sameSite: isProduction ? 'none' : 'lax',
+  maxAge: 365 * 24 * 60 * 60 * 1000, //365d
+};
 const registerUser = async (
   req: Request,
   res: Response,
@@ -42,12 +65,8 @@ const VerifyOtpForRegistration=catchAsync(async (req:Request, res:Response) => {
   // console.log("request body",req.body);
     const result = await AuthServices.verifyOTPForRegistration(email,otp);
     //set refress token on cookies
-  res.cookie('refreshToken', result.refreshToken, {
-    secure: config.NODE_ENV === 'production',
-    httpOnly: true,
-    sameSite: 'none',
-    maxAge: 1000 * 60 * 60 * 24 * 365,
-  });
+res.cookie('accessToken', result.accessToken, accessTokenOptions);
+res.cookie('refreshToken', result.refreshToken, refreshTokenOptions);
     sendResponse(res, {
       statusCode: httpStatus.OK,
       success: true,
@@ -72,12 +91,8 @@ const userLogin=catchAsync(async(req,res)=>{
   const result = await AuthServices.loginUser(req.body);
 
 //set refress token on cookies
-  res.cookie('refreshToken', result.refreshToken, {
-    secure: config.NODE_ENV === 'production',
-    httpOnly: true,
-    sameSite: 'none',
-    maxAge: 1000 * 60 * 60 * 24 * 365,
-  });
+res.cookie('accessToken', result.accessToken, accessTokenOptions);
+res.cookie('refreshToken', result.refreshToken, refreshTokenOptions);
     sendResponse(res, {
         success: true,
         message: 'Logged in Successfully',
@@ -89,12 +104,8 @@ const AdminLogin=catchAsync(async(req,res)=>{
   const result = await AuthServices.loginAdmin(req.body);
 
 //set refress token on cookies
-  res.cookie('refreshToken', result.refreshToken, {
-    secure: config.NODE_ENV === 'production',
-    httpOnly: true,
-    sameSite: 'none',
-    maxAge: 1000 * 60 * 60 * 24 * 365,
-  });
+res.cookie('accessToken', result.accessToken, accessTokenOptions);
+res.cookie('refreshToken', result.refreshToken, refreshTokenOptions);
     sendResponse(res, {
         success: true,
         message: 'User Logged in Successfully',
