@@ -188,6 +188,38 @@ const verifyYourOTP = catchAsync(async (req:Request, res:Response) => {
     });
   });
 
+
+
+
+// logout
+
+
+const logout = catchAsync(async (req: Request, res: Response) => {
+
+  const cookieOptions: any = {
+    secure: config.NODE_ENV === 'production',
+    httpOnly: true,
+    sameSite: config.NODE_ENV === 'production' ? 'none' : 'lax',
+  };
+
+
+  res.clearCookie('accessToken', cookieOptions);
+  res.clearCookie('refreshToken', cookieOptions);
+
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: 'Logged out successfully!',
+    data: {},
+  });
+});
+
+
+
+
+
+
+
 export const AuthControllers = {
-  registerUser,userLogin,changePassword,refreshToken,forgotPassword,verifyYourOTP,resetPassword,VerifyOtpForRegistration,resendOtp,AdminLogin
+  registerUser,userLogin,changePassword,refreshToken,forgotPassword,verifyYourOTP,resetPassword,VerifyOtpForRegistration,resendOtp,AdminLogin,logout
 };

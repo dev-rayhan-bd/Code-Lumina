@@ -71,6 +71,10 @@ router.post(
   validateRequest(AuthValidation.verifyOtpSchema),
   AuthControllers.VerifyOtpForRegistration,
 );
-
+router.post(
+  '/logout',
+  auth(USER_ROLE.user, USER_ROLE.superAdmin), 
+  AuthControllers.logout
+);
 
 export const AuthRoutes = router;
