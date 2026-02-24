@@ -6,55 +6,65 @@ import httpStatus from 'http-status';
 import AppError from '../../errors/AppError';
 import config from '../../config';
 
+import { UserModel } from '../User/user.model'; 
 
 const sendMessage = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { subject, email, message } = req.body;
+    const { subject, message } = req.body;
+    const userId = req.user.userId; 
 
-    if (!subject || !email || !message) {
-      res.status(httpStatus.BAD_REQUEST).json({
+ 
+    const user = await UserModel.findById(userId);
+    
+    if (!user) {
+      res.status(httpStatus.NOT_FOUND).json({
         success: false,
-        message: 'All fields are required.',
+        message: 'User not found.',
       });
       return;
     }
 
-    // create transporter
+    const senderEmail = user.email; 
+
+    if (!subject || !message) {
+      res.status(httpStatus.BAD_REQUEST).json({
+        success: false,
+        message: 'Subject and message are required.',
+      });
+      return;
+    }
+
+
     const transporter = nodemailer.createTransport({
       service: 'gmail',
       auth: {
-        user: config.SMTP_USER, // your app's email (sender)
+        user: config.SMTP_USER,
         pass: config.SMTP_PASS,
       },
     });
 
-    const mailOptions: SendMailOptions = {
-      from: `<${config.SMTP_USER}>`,
-      to: process.env.CONTACT_RECEIVER_EMAIL || config.SMTP_USER,
-      subject:` ${subject}`,
-      text: `
-You received a new message from your app contact form:
-
-Email: ${email}
-
-Message:
-${message}
-      `,
-      // replyTo: email, 
+    const mailOptions = {
+      from: `"${user.firstName}" <${config.SMTP_USER}>`, 
+      to: config.SMTP_USER,
+      replyTo: senderEmail,
+      subject: `[Contact Form] ${subject}`,
+      text: `Message from ${user.firstName} ${user.lastName} (${senderEmail}):\n\n${message}`,
     };
 
-    const info: SentMessageInfo = await transporter.sendMail(mailOptions);
-
-    console.log('Message sent: %s', info.messageId);
+    await transporter.sendMail(mailOptions);
 
     res.status(httpStatus.OK).json({
       success: true,
-      message: 'Message sent successfully.',
+      message: 'Message sent successfully!',
     });
 
   } catch (error: any) {
-    console.error('Error sending email:', error);
-    throw new AppError(httpStatus.INTERNAL_SERVER_ERROR, 'Error sending email.');
+    console.error('Email Error:', error); 
+    res.status(httpStatus.INTERNAL_SERVER_ERROR).json({
+      success: false,
+      message: 'Error sending email.',
+      error: error.message
+    });
   }
 };
 

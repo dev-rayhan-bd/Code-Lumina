@@ -18,11 +18,11 @@ const isProduction = config.NODE_ENV === 'production';
 
 const accessTokenOptions: any = {
 
+  path: '/', 
   secure: isProduction, 
-  
   httpOnly: true,
   
-  sameSite: isProduction ? 'none' : 'lax', 
+   sameSite: isProduction ? 'none' : 'lax', 
   
   maxAge: 1 * 24 * 60 * 60 * 1000, // 1d
 };
@@ -30,7 +30,8 @@ const accessTokenOptions: any = {
 const refreshTokenOptions: any = {
   secure: isProduction,
   httpOnly: true,
-  sameSite: isProduction ? 'none' : 'lax',
+  path: '/', 
+ sameSite: isProduction ? 'none' : 'lax', 
   maxAge: 365 * 24 * 60 * 60 * 1000, //365d
 };
 const registerUser = async (
