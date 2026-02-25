@@ -19,6 +19,7 @@ const codeReviewSchema = new Schema({
     enum: ['TP', 'TN', 'FP', 'FN'],
     required: true
   },
+   iteration: { type: Number, default: 1 },
   isVerified: { 
     type: Boolean, 
     default: false 

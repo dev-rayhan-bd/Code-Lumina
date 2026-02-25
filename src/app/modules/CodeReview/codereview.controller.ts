@@ -11,14 +11,57 @@ import AppError from "../../errors/AppError";
 // for code review and save on db
 
 
+// const processCodeReview = catchAsync(async (req: Request, res: Response) => {
+//   const { code, groundTruth } = req.body;
+
+//   //  AI analysys
+//   const aiResult = await analyzeCodeWithAI(code);
+//   const aiFoundBugs = aiResult.vulnerabilities && aiResult.vulnerabilities.length > 0;
+
+//   // ২. Confusion Matrix Logic (Auto-Classification)
+//   let classification: 'TP' | 'TN' | 'FP' | 'FN';
+//   if (groundTruth === 'Vulnerable') {
+//     classification = aiFoundBugs ? 'TP' : 'FN';
+//   } else {
+//     classification = aiFoundBugs ? 'FP' : 'TN';
+//   }
+
+ 
+//   const savedData = await CodeReviewModel.create({
+//     user: req.user?.userId,
+//     codeSnippet: code,
+//     modelName: "Llama-3.3-70b (Groq)",
+//     analysis: aiResult,
+//     groundTruth,
+//     classification
+//   });
+
+//   sendResponse(res, {
+//     statusCode: httpStatus.OK,
+//     success: true,
+//     message: `Analysis Completed! Classified as ${classification}`,
+//     data: savedData,
+//   });
+// });
+// codereview.controller.ts
+
 const processCodeReview = catchAsync(async (req: Request, res: Response) => {
   const { code, groundTruth } = req.body;
+  const userId = req.user?.userId;
 
-  //  AI analysys
+  const lastAudit = await CodeReviewModel.findOne({ 
+    user: userId, 
+    codeSnippet: code 
+  }).sort({ createdAt: -1 }).lean(); 
+
+
+  const iteration = lastAudit ? lastAudit.iteration + 1 : 1;
+
+
   const aiResult = await analyzeCodeWithAI(code);
   const aiFoundBugs = aiResult.vulnerabilities && aiResult.vulnerabilities.length > 0;
 
-  // ২. Confusion Matrix Logic (Auto-Classification)
+  // Classification Logic
   let classification: 'TP' | 'TN' | 'FP' | 'FN';
   if (groundTruth === 'Vulnerable') {
     classification = aiFoundBugs ? 'TP' : 'FN';
@@ -26,24 +69,24 @@ const processCodeReview = catchAsync(async (req: Request, res: Response) => {
     classification = aiFoundBugs ? 'FP' : 'TN';
   }
 
- 
+
   const savedData = await CodeReviewModel.create({
-    user: req.user?.userId,
+    user: userId,
     codeSnippet: code,
     modelName: "Llama-3.3-70b (Groq)",
     analysis: aiResult,
     groundTruth,
-    classification
+    classification,
+    iteration 
   });
 
   sendResponse(res, {
     statusCode: httpStatus.OK,
     success: true,
-    message: `Analysis Completed! Classified as ${classification}`,
+    message: "Audit Success!",
     data: savedData,
   });
 });
-
 // analytics
 const getAnalytics = catchAsync(async (req: Request, res: Response) => {
   const result = await CodeReviewServices.getAnalyticsFromDB();
