@@ -48,7 +48,12 @@ import AppError from "../../errors/AppError";
 const processCodeReview = catchAsync(async (req: Request, res: Response) => {
   const { code, groundTruth } = req.body;
   const userId = req.user?.userId;
-
+  if (!code || code.trim().length === 0) {
+    throw new AppError(httpStatus.BAD_REQUEST, "You have to submit your code.");
+  }
+  if ( code.trim().length < 5) {
+    throw new AppError(httpStatus.BAD_REQUEST, "Input is too short to be analyzed.");
+  }
   const lastAudit = await CodeReviewModel.findOne({ 
     user: userId, 
     codeSnippet: code 
@@ -59,6 +64,11 @@ const processCodeReview = catchAsync(async (req: Request, res: Response) => {
 
 
   const aiResult = await analyzeCodeWithAI(code);
+// solid data normalization for prevent ui errors and ensure consistent DB entries
+ const vulnerabilities = aiResult.vulnerabilities || [];
+  const rating = Number(aiResult.rating) || 10;
+  const suggestions = aiResult.suggestions || [];
+
   const aiFoundBugs = aiResult.vulnerabilities && aiResult.vulnerabilities.length > 0;
 
   // Classification Logic
@@ -74,10 +84,14 @@ const processCodeReview = catchAsync(async (req: Request, res: Response) => {
     user: userId,
     codeSnippet: code,
     modelName: "Llama-3.3-70b (Groq)",
-    analysis: aiResult,
+    analysis: {
+      vulnerabilities,
+      rating,
+      suggestions
+    },
     groundTruth,
     classification,
-    iteration 
+    iteration
   });
 
   sendResponse(res, {
