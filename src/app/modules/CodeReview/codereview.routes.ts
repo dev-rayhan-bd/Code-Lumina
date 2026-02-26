@@ -11,22 +11,22 @@ router.post(
   auth(USER_ROLE.user, USER_ROLE.superAdmin), 
   CodeReviewControllers.processCodeReview
 );
-
+router.get(
+  '/all-reviews', 
+  auth( USER_ROLE.superAdmin), 
+  CodeReviewControllers.getAllReviews
+);
 // code review history for dev
 router.get(
   '/my-history', 
   auth(USER_ROLE.user, USER_ROLE.superAdmin), 
   CodeReviewControllers.getMyReviews
 );
-router.get(
-  '/all', 
-  auth( USER_ROLE.superAdmin), 
-  CodeReviewControllers.getAllReviews
-);
+
 // 
 router.get(
   '/analytics', 
-  auth(USER_ROLE.superAdmin), 
+  auth(USER_ROLE.superAdmin,USER_ROLE.user), 
   CodeReviewControllers.getAnalytics
 );
 // single review details
