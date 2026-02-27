@@ -26,7 +26,7 @@ router.get(
 // 
 router.get(
   '/analytics', 
-  auth(USER_ROLE.superAdmin,USER_ROLE.user), 
+  // auth(USER_ROLE.superAdmin,USER_ROLE.user), 
   CodeReviewControllers.getAnalytics
 );
 // single review details
